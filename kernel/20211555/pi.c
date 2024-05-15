@@ -2,12 +2,14 @@
 #include <stdlib.h>
 #include <pthread.h>
 #include <time.h>
+#include <semaphore.h>
 
-#define NUM_THREADS 40
+#define NUM_THREADS 4
 #define NUM_POINTS 1000000
 
 int c_points = 0;
-pthread_mutex_t mutex;
+//pthread_mutex_t mutex;
+sem_t mutex;
 
 void *monte_carlo()
 {
@@ -24,17 +26,22 @@ void *monte_carlo()
             cnt++;
         }
     }
-    pthread_mutex_lock(&mutex);
-    c_points += cnt;
-    pthread_mutex_unlock(&mutex);
+    //pthread_mutex_lock(&mutex);
+    //c_points += cnt;
+    //pthread_mutex_unlock(&mutex);
 
+    sem_wait(&mutex);
+    c_points += cnt;
+    sem_post(&mutex);
+    
     pthread_exit(NULL);
 }
 
 int pi()
 {
     pthread_t thread_adders[NUM_THREADS];
-    pthread_mutex_init(&mutex, NULL);
+    //pthread_mutex_init(&mutex, NULL);
+    sem_init(&mutex, 0, 1);
 
     for (int i = 0; i < NUM_THREADS; i++)
     {
@@ -49,6 +56,7 @@ int pi()
 
     c_points = 0;
     pthread_mutex_destroy(&mutex);
+    sem_destroy(&mutex);
 
     return 0;
 }
